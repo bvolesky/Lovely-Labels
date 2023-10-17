@@ -2,60 +2,42 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 
-
 class Sheet:
-    def __init__(
-        self, width=8.5, height=11, x_margin=0.19, y_margin=0.5, line_width=0.3
-    ):
+    def __init__(self, width=8.5, height=11, x_margin=0.19, y_margin=0.5, line_width=0.3, outline=False):
         self.width = width
         self.height = height
         self.x_margin = x_margin
         self.y_margin = y_margin
         self.canvas = canvas.Canvas("address_labels.pdf", pagesize=letter)
         self.canvas.setLineWidth(line_width)
-
-
-class LabelGroup:
-    # Create a label group that is the size of the sheet inside margins
-    def __init__(self, sheet, outline=False):
-        self.sheet = sheet
-        self.x = sheet.x_margin
-        self.y = sheet.y_margin
-        self.width = sheet.width - (sheet.x_margin * 2)
-        self.height = sheet.height - (sheet.y_margin * 2)
-        self.canvas = sheet.canvas
         self.outline = outline
         self.draw_margins()
 
-    # Draw the margins of the label group
     def draw_margins(self, fill=False):
         if self.outline:
             self.canvas.rect(
-                self.x * inch, self.y * inch, self.width * inch, self.height * inch
+                self.x_margin * inch, self.y_margin * inch,
+                (self.width - 2*self.x_margin) * inch, (self.height - 2*self.y_margin) * inch
             )
         if fill:
             self.canvas.setFillColorRGB(0, 0, 0)
             self.canvas.rect(
-                self.x * inch,
-                self.y * inch,
-                self.width * inch,
-                self.height * inch,
-                fill=1,
+                self.x_margin * inch, self.y_margin * inch,
+                (self.width - 2*self.x_margin) * inch, (self.height - 2*self.y_margin) * inch, fill=1
             )
 
-
 class LabelMatrix:
-    def __init__(self, label_group, label, data, outline=False):
+    def __init__(self, sheet, label, data, outline=False):
         self.num_rows = 10
         self.num_cols = 3
-        self.horizontal_spacing = 0.118  # Introducing horizontal spacing between labels
-        self.label_group = label_group
+        self.horizontal_spacing = 0.118
+        self.sheet = sheet
         self.label = label
-        self.x = label_group.x
-        self.y = label_group.y
-        self.width = label_group.width
-        self.height = label_group.height
-        self.canvas = label_group.canvas
+        self.x = sheet.x_margin
+        self.y = sheet.y_margin
+        self.width = sheet.width - 2*sheet.x_margin
+        self.height = sheet.height - 2*sheet.y_margin
+        self.canvas = sheet.canvas
         self.matrix = []
         self.data = data
         self.outline = outline
@@ -65,7 +47,7 @@ class LabelMatrix:
         self.matrix = [
             [
                 Label(
-                    self.label_group,
+                    self.sheet,
                     self.x + i * (self.label.width + self.horizontal_spacing),
                     self.y + j * self.label.height,
                     self.data,
@@ -99,7 +81,7 @@ class Label:
         self.height = height
         self.canvas = label_group.canvas
         self.address_group = AddressGroup(self, data)
-        self.image_group = ImageGroup(self, Image("A.jpg"))
+        self.image_group = ImageGroup(self, Image(data["image_path"]))
         if not bypass:
             self.address_group.draw()
 
@@ -195,7 +177,6 @@ class AddressLine:
                 fill=1,
             )
 
-
 class Text:
     def __init__(self, content):
         self.content = content
@@ -205,11 +186,6 @@ class Text:
     def draw(self, canvas, x, y):
         canvas.setFont(self.font, self.size)  # Set the font and size before drawing
         canvas.drawString(x, y, self.content)
-
-
-# Create a label matrix in the label group that is 3x10
-
-
 
 # Create an image group class that is the container for the image, the image group is similar to the address group
 class ImageGroup:
@@ -246,7 +222,6 @@ class ImageGroup:
                 fill=1,
             )
 
-
 class Image:
     def __init__(self, path):
         self.path = path
@@ -256,8 +231,6 @@ class Image:
 
 
 # Usage
-my_sheet = Sheet()
-my_label_group = LabelGroup(my_sheet)
 data = {
     "first_name": "John",
     "last_name": "Doe",
@@ -265,8 +238,10 @@ data = {
     "city": "Anytown",
     "state": "KS",
     "zip": "12345",
+    "image_path": "A.jpg"
 }
-my_label = Label(my_label_group, 0, 0, data, bypass=True)
-my_label_matrix = LabelMatrix(my_label_group, my_label, data)
+my_sheet = Sheet(outline=True)
+my_label = Label(my_sheet, my_sheet.x_margin, my_sheet.y_margin, data, bypass=True)
+my_label_matrix = LabelMatrix(my_sheet, my_label, data)
 my_label_matrix.draw()
 my_sheet.canvas.save()
