@@ -44,12 +44,15 @@ class Label:
         self.height = height
         self.canvas = label_group.canvas
         self.address_group = AddressGroup(self, data)
+        self.image_group = ImageGroup(self, Image('A.jpg'))
         if not bypass:
             self.address_group.draw()
 
     def draw(self, fill=False):
         self.canvas.rect(self.x * inch, self.y * inch, self.width * inch,
                          self.height * inch)
+        self.image_group.draw()
+
         if fill:
             self.canvas.setFillColorRGB(0, 0, 0)
             self.canvas.rect(self.x * inch, self.y * inch, self.width * inch,
@@ -92,10 +95,11 @@ class Text:
     def __init__(self, content):
         self.content = content
         self.font = "Helvetica"
-        self.size = 12
+        self.size = 10
 
 
     def draw(self, canvas, x, y):
+        canvas.setFont(self.font, self.size)  # Set the font and size before drawing
         canvas.drawString(x, y, self.content)
 
 
@@ -170,7 +174,31 @@ class LabelMatrix:
             # location is a tuple of (row, col)
             self.matrix[location[0]][location[1]].draw(fill)
 
+# Create an image group class that is the container for the image, the image group is similar to the address group
+class ImageGroup:
+    def __init__(self, label, image, padding=0.15):
+        self.label = label
+        self.padding = padding
+        self.width = label.width * 0.35
+        self.height = label.height - 2 * self.padding
+        self.x = label.x + self.padding
+        self.y = label.y + self.padding
+        self.canvas = label.canvas
+        self.image = image
 
+    def draw(self, fill=False):
+        #self.canvas.rect(self.x * inch, self.y * inch, self.width * inch, self.height * inch)
+        self.image.draw(self.canvas, self.x * inch, self.y * inch, self.width * inch, self.height * inch)
+        if fill:
+            self.canvas.setFillColorRGB(0, 0, 0)
+            self.canvas.rect(self.x * inch, self.y * inch, self.width * inch, self.height * inch, fill=1)
+
+class Image:
+    def __init__(self, path):
+        self.path = path
+
+    def draw(self, canvas, x, y, width, height):
+        canvas.drawImage(self.path, x, y, width, height)
 
 # Usage
 my_sheet = Sheet()
