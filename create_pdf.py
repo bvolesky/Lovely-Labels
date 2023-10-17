@@ -43,15 +43,11 @@ class Sheet:
         self.margin_outline = margin_outline
         self._draw_margins()
 
-    def _draw_margins(self, fill=False):
+    def _draw_margins(self):
         if self.margin_outline:
-            self._rect_with_optional_fill(self.x_margin, self.y_margin, self.width - 2 * self.x_margin, self.height - 2 * self.y_margin, fill)
+            x, y, width, height = self.x_margin, self.y_margin, self.width - 2 * self.x_margin, self.height - 2 * self.y_margin
+            self.canvas.rect(x * inch, y * inch, width * inch, height * inch)
 
-    def _rect_with_optional_fill(self, x, y, width, height, fill):
-        self.canvas.rect(x * inch, y * inch, width * inch, height * inch)
-        if fill:
-            self.canvas.setFillColorRGB(0, 0, 0)
-            self.canvas.rect(x * inch, y * inch, width * inch, height * inch, fill=1)
 
 class LabelMatrix:
     def __init__(
@@ -105,14 +101,14 @@ class LabelMatrix:
         ]
         self._draw()
 
-    def _draw(self, location=False, fill=False):
+    def _draw(self, location=False):
         if not location:
             for row in self.matrix:
                 for label in row:
-                    label.draw(fill)
+                    label.draw()
         else:
             # location is a tuple of (row, col)
-            self.matrix[location[0]][location[1]].draw(fill)
+            self.matrix[location[0]][location[1]].draw()
 
 class Label:
     def __init__(
@@ -127,7 +123,6 @@ class Label:
         image_outline=False,
         width=LABEL_WIDTH,
         height=LABEL_HEIGHT,
-        bypass=False,
     ):
         self.label_group = label_group
         self.x = x
@@ -139,33 +134,23 @@ class Label:
         self.address_outline = address_outline
         self.address_lines_outline = address_lines_outline
         self.image_outline = image_outline
+        self.image_group = ImageGroup(
+            self, Image(data["image_path"]), image_outline=self.image_outline
+        )
         self.address_group = AddressGroup(
             self,
             data,
             address_outline=self.address_outline,
             address_lines_outline=self.address_lines_outline,
         )
-        self.image_group = ImageGroup(
-            self, Image(data["image_path"]), image_outline=self.image_outline
-        )
-        if not bypass:
-            self.address_group.draw()
 
-    def draw(self, fill=False):
+
+    def draw(self):
+        self.image_group.draw()
+        self.address_group.draw()
         if self.label_outline:
             self.canvas.rect(
                 self.x * inch, self.y * inch, self.width * inch, self.height * inch
-            )
-        self.image_group.draw()
-
-        if fill:
-            self.canvas.setFillColorRGB(0, 0, 0)
-            self.canvas.rect(
-                self.x * inch,
-                self.y * inch,
-                self.width * inch,
-                self.height * inch,
-                fill=1,
             )
 
 class AddressGroup:
@@ -199,12 +184,14 @@ class AddressGroup:
             self.address_lines.append(line)
 
     def draw(self):
+        for line in self.address_lines:
+            line.draw()
+
         if self.address_outline:
             self.canvas.rect(
                 self.x * inch, self.y * inch, self.width * inch, self.height * inch
             )
-        for line in self.address_lines:
-            line.draw()
+
 
 class AddressLine:
     def __init__(
@@ -270,11 +257,11 @@ data = {
     "image_path": "A.jpg",
 }
 
-MARGIN_OUTLINE = False
-LABEL_OUTLINE = False
-ADDRESS_OUTLINE = False
-ADDRESS_LINES_OUTLINE = False
-IMAGE_OUTLINE = False
+MARGIN_OUTLINE = True
+LABEL_OUTLINE = True
+ADDRESS_OUTLINE = True
+ADDRESS_LINES_OUTLINE = True
+IMAGE_OUTLINE = True
 
 my_sheet = Sheet(margin_outline=MARGIN_OUTLINE)
 my_label_matrix = LabelMatrix(
