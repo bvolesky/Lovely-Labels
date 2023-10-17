@@ -2,15 +2,21 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 
+# Constants
+DEFAULT_WIDTH = 8.5
+DEFAULT_HEIGHT = 11
+DEFAULT_X_MARGIN = 0.19
+DEFAULT_Y_MARGIN = 0.5
+DEFAULT_LINE_WIDTH = 0.3
 
 class Sheet:
     def __init__(
         self,
-        width=8.5,
-        height=11,
-        x_margin=0.19,
-        y_margin=0.5,
-        line_width=0.3,
+        width=DEFAULT_WIDTH,
+        height=DEFAULT_HEIGHT,
+        x_margin=DEFAULT_X_MARGIN,
+        y_margin=DEFAULT_Y_MARGIN,
+        line_width=DEFAULT_LINE_WIDTH,
         margin_outline=False,
     ):
         self.width = width
@@ -20,25 +26,16 @@ class Sheet:
         self.canvas = canvas.Canvas("address_labels.pdf", pagesize=letter)
         self.canvas.setLineWidth(line_width)
         self.margin_outline = margin_outline
-        self.draw_margins()
+        self._draw_margins()
 
-    def draw_margins(self, fill=False):
-        if self.margin_outline:
-            self.canvas.rect(
-                self.x_margin * inch,
-                self.y_margin * inch,
-                (self.width - 2 * self.x_margin) * inch,
-                (self.height - 2 * self.y_margin) * inch,
-            )
+    def _draw_margins(self, fill=False):
+        self._rect_with_optional_fill(self.x_margin, self.y_margin, self.width - 2 * self.x_margin, self.height - 2 * self.y_margin, fill)
+
+    def _rect_with_optional_fill(self, x, y, width, height, fill):
+        self.canvas.rect(x * inch, y * inch, width * inch, height * inch)
         if fill:
             self.canvas.setFillColorRGB(0, 0, 0)
-            self.canvas.rect(
-                self.x_margin * inch,
-                self.y_margin * inch,
-                (self.width - 2 * self.x_margin) * inch,
-                (self.height - 2 * self.y_margin) * inch,
-                fill=1,
-            )
+            self.canvas.rect(x * inch, y * inch, width * inch, height * inch, fill=1)
 
 
 class LabelMatrix:
@@ -55,9 +52,7 @@ class LabelMatrix:
         self.num_cols = 3
         self.horizontal_spacing = 0.118
         self.sheet = sheet
-        self.label = Label(
-            my_sheet, my_sheet.x_margin, my_sheet.y_margin, data, bypass=True
-        )
+        self.sample_label = self._create_sample_label(data)
         self.x = sheet.x_margin
         self.y = sheet.y_margin
         self.width = sheet.width - 2 * sheet.x_margin
@@ -69,15 +64,20 @@ class LabelMatrix:
         self.address_outline = address_outline
         self.address_lines_outline = address_lines_outline
         self.image_outline = image_outline
-        self.create_matrix()
+        self._create_matrix()
 
-    def create_matrix(self):
+    def _create_sample_label(self, data):
+        return Label(
+            self.sheet, self.sheet.x_margin, self.sheet.y_margin, data
+        )
+
+    def _create_matrix(self):
         self.matrix = [
             [
                 Label(
                     self.sheet,
-                    self.x + i * (self.label.width + self.horizontal_spacing),
-                    self.y + j * self.label.height,
+                    self.x + i * (self.sample_label.width + self.horizontal_spacing),
+                    self.y + j * self.sample_label.height,
                     self.data,
                     self.label_outline,
                     self.address_outline,
@@ -88,9 +88,9 @@ class LabelMatrix:
             ]
             for j in range(self.num_rows)
         ]
-        self.draw()
+        self._draw()
 
-    def draw(self, location=False, fill=False):
+    def _draw(self, location=False, fill=False):
         if not location:
             for row in self.matrix:
                 for label in row:
@@ -314,7 +314,6 @@ LABEL_OUTLINE = True
 ADDRESS_OUTLINE = True
 ADDRESS_LINES_OUTLINE = True
 IMAGE_OUTLINE = True
-
 
 my_sheet = Sheet(margin_outline=MARGIN_OUTLINE)
 my_label_matrix = LabelMatrix(
