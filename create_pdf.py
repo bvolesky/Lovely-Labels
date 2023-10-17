@@ -2,6 +2,26 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 
+data = {
+    "first_name": "Johnathan",
+    "last_name": "Glutionspaget",
+    "address": "10203 Main St. PO Box 123",
+    "city": "New Longworth",
+    "state": "California",
+    "zip": "12345",
+    "image_path": "A.jpg",
+}
+
+line_data = [
+            data["first_name"] + " " + data["last_name"],
+            data["address"],
+            data["city"] + ", " + data["state"] + " " + data["zip"]]
+
+
+label_data = {"lines": line_data, "image_path": data["image_path"]}
+
+
+
 # Global Constants
 DEFAULT_WIDTH = 8.5
 DEFAULT_HEIGHT = 11
@@ -16,13 +36,24 @@ LABEL_WIDTH = 2.625
 LABEL_HEIGHT = 1
 ADDRESS_GROUP_PADDING = 0.15
 IMAGE_GROUP_PADDING = 0.15
-ADDRESS_LINE_HEIGHT = 0.23
+ADDRESS_LINE_HEIGHT = (LABEL_HEIGHT - 2 * ADDRESS_GROUP_PADDING) / len(line_data)
 ADDRESS_LINE_SPACING = 0.0
 
 FONT_NAME = "Helvetica"
-FONT_SIZE = 10
+FONT_SIZE = 10 - (len(line_data) - 3)
 TEXT_X_OFFSET = 0.025
 TEXT_Y_OFFSET = 0.05
+
+
+# Usage
+MARGIN_OUTLINE = True
+LABEL_OUTLINE = True
+ADDRESS_OUTLINE = True
+ADDRESS_LINES_OUTLINE = True
+IMAGE_OUTLINE = True
+
+
+
 
 class Sheet:
     def __init__(
@@ -170,15 +201,10 @@ class AddressGroup:
         self.data = data
         self.address_outline = address_outline
         self.address_lines_outline = address_lines_outline
-        self._create_address_lines()
+        self._create_address_lines(self.data)
 
-    def _create_address_lines(self):
-        line_data = [
-            self.data["first_name"] + " " + self.data["last_name"],
-            self.data["address"],
-            self.data["city"] + ", " + self.data["state"] + " " + self.data["zip"],
-        ]
-        for i, data in enumerate(line_data):
+    def _create_address_lines(self, line_data):
+        for i, data in enumerate(line_data['lines'][::-1]):
             y = self.y + i * (self.line_height + self.line_spacing)
             line = AddressLine(self, self.x, y, data, self.address_lines_outline)
             self.address_lines.append(line)
@@ -246,30 +272,22 @@ class Image:
             self.image_path, x * inch, y * inch, width * inch, height * inch
         )
 
-# Usage
-data = {
-    "first_name": "John",
-    "last_name": "Doe",
-    "address": "123 Main St.",
-    "city": "Anytown",
-    "state": "KS",
-    "zip": "12345",
-    "image_path": "A.jpg",
-}
 
-MARGIN_OUTLINE = True
-LABEL_OUTLINE = True
-ADDRESS_OUTLINE = True
-ADDRESS_LINES_OUTLINE = True
-IMAGE_OUTLINE = True
 
-my_sheet = Sheet(margin_outline=MARGIN_OUTLINE)
-my_label_matrix = LabelMatrix(
-    my_sheet,
-    data,
-    label_outline=LABEL_OUTLINE,
-    address_outline=ADDRESS_OUTLINE,
-    address_lines_outline=ADDRESS_LINES_OUTLINE,
-    image_outline=IMAGE_OUTLINE,
-)
-my_sheet.canvas.save()
+
+
+def main():
+    my_sheet = Sheet(margin_outline=MARGIN_OUTLINE)
+    my_label_matrix = LabelMatrix(
+        my_sheet,
+        label_data,
+        label_outline=LABEL_OUTLINE,
+        address_outline=ADDRESS_OUTLINE,
+        address_lines_outline=ADDRESS_LINES_OUTLINE,
+        image_outline=IMAGE_OUTLINE,
+    )
+    my_sheet.canvas.save()
+
+
+if __name__ == "__main__":
+    main()
