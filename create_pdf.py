@@ -3,23 +3,23 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 
 data = {
-    "first_name": "Johnathan",
-    "last_name": "Glutionspaget",
-    "address": "10203 Main St. PO Box 123",
-    "city": "New Longworth",
-    "state": "California",
-    "zip": "12345",
-    "image_path": "A.jpg",
+    "first_name": "Johnny",
+    "last_name": "Appleseed",
+    "address": "1774 Red Road",
+    "city": "Leominster",
+    "state": "MA",
+    "zip": "01453",
+    "image_path": "images/A.jpg",
 }
 
 line_data = [
-            data["first_name"] + " " + data["last_name"],
-            data["address"],
-            data["city"] + ", " + data["state"] + " " + data["zip"]]
+    data["first_name"] + " " + data["last_name"],
+    data["address"],
+    data["city"] + ", " + data["state"] + " " + data["zip"],
+]
 
 
 label_data = {"lines": line_data, "image_path": data["image_path"]}
-
 
 
 # Global Constants
@@ -40,19 +40,30 @@ ADDRESS_LINE_HEIGHT = (LABEL_HEIGHT - 2 * ADDRESS_GROUP_PADDING) / len(line_data
 ADDRESS_LINE_SPACING = 0.0
 
 FONT_NAME = "Helvetica"
-FONT_SIZE = 10 - (len(line_data) - 3)
+FONT_SIZE = 9 - (len(line_data) - 3)
 TEXT_X_OFFSET = 0.025
 TEXT_Y_OFFSET = 0.05
 
 
 # Usage
-MARGIN_OUTLINE = True
-LABEL_OUTLINE = True
-ADDRESS_OUTLINE = True
-ADDRESS_LINES_OUTLINE = True
-IMAGE_OUTLINE = True
+MARGIN_OUTLINE = False
+LABEL_OUTLINE = False
+ADDRESS_OUTLINE = False
+ADDRESS_LINES_OUTLINE = False
+IMAGE_OUTLINE = False
 
-
+# Output path
+OUTPUT_PATH = "output/address_labels.pdf"
+if all(
+    [
+        MARGIN_OUTLINE,
+        LABEL_OUTLINE,
+        ADDRESS_OUTLINE,
+        ADDRESS_LINES_OUTLINE,
+        IMAGE_OUTLINE,
+    ]
+):
+    OUTPUT_PATH = "output/address_labels_with_outlines.pdf"
 
 
 class Sheet:
@@ -69,14 +80,19 @@ class Sheet:
         self.height = height
         self.x_margin = x_margin
         self.y_margin = y_margin
-        self.canvas = canvas.Canvas("address_labels.pdf", pagesize=letter)
+        self.canvas = canvas.Canvas(OUTPUT_PATH, pagesize=letter)
         self.canvas.setLineWidth(line_width)
         self.margin_outline = margin_outline
         self._draw_margins()
 
     def _draw_margins(self):
         if self.margin_outline:
-            x, y, width, height = self.x_margin, self.y_margin, self.width - 2 * self.x_margin, self.height - 2 * self.y_margin
+            x, y, width, height = (
+                self.x_margin,
+                self.y_margin,
+                self.width - 2 * self.x_margin,
+                self.height - 2 * self.y_margin,
+            )
             self.canvas.rect(x * inch, y * inch, width * inch, height * inch)
 
 
@@ -109,9 +125,7 @@ class LabelMatrix:
         self._create_matrix()
 
     def _create_sample_label(self, data):
-        return Label(
-            self.sheet, self.sheet.x_margin, self.sheet.y_margin, data
-        )
+        return Label(self.sheet, self.sheet.x_margin, self.sheet.y_margin, data)
 
     def _create_matrix(self):
         self.matrix = [
@@ -140,6 +154,7 @@ class LabelMatrix:
         else:
             # location is a tuple of (row, col)
             self.matrix[location[0]][location[1]].draw()
+
 
 class Label:
     def __init__(
@@ -175,7 +190,6 @@ class Label:
             address_lines_outline=self.address_lines_outline,
         )
 
-
     def draw(self):
         self.image_group.draw()
         self.address_group.draw()
@@ -184,9 +198,15 @@ class Label:
                 self.x * inch, self.y * inch, self.width * inch, self.height * inch
             )
 
+
 class AddressGroup:
     def __init__(
-        self, label, data, address_outline, address_lines_outline, padding=ADDRESS_GROUP_PADDING
+        self,
+        label,
+        data,
+        address_outline,
+        address_lines_outline,
+        padding=ADDRESS_GROUP_PADDING,
     ):
         self.label = label
         self.padding = padding
@@ -204,7 +224,7 @@ class AddressGroup:
         self._create_address_lines(self.data)
 
     def _create_address_lines(self, line_data):
-        for i, data in enumerate(line_data['lines'][::-1]):
+        for i, data in enumerate(line_data["lines"][::-1]):
             y = self.y + i * (self.line_height + self.line_spacing)
             line = AddressLine(self, self.x, y, data, self.address_lines_outline)
             self.address_lines.append(line)
@@ -221,7 +241,13 @@ class AddressGroup:
 
 class AddressLine:
     def __init__(
-        self, address_group, x, y, text, address_lines_outline, height=ADDRESS_LINE_HEIGHT
+        self,
+        address_group,
+        x,
+        y,
+        text,
+        address_lines_outline,
+        height=ADDRESS_LINE_HEIGHT,
     ):
         self.address_group = address_group
         self.x = x
@@ -244,6 +270,7 @@ class AddressLine:
                 self.x * inch, self.y * inch, self.width * inch, self.height * inch
             )
 
+
 class ImageGroup:
     def __init__(self, label, image, image_outline=False, padding=IMAGE_GROUP_PADDING):
         self.label = label
@@ -263,17 +290,15 @@ class ImageGroup:
                 self.x * inch, self.y * inch, self.width * inch, self.height * inch
             )
 
+
 class Image:
     def __init__(self, image_path):
         self.image_path = image_path
 
-    def draw(self,canvas, x, y, width, height):
+    def draw(self, canvas, x, y, width, height):
         canvas.drawImage(
             self.image_path, x * inch, y * inch, width * inch, height * inch
         )
-
-
-
 
 
 def main():
