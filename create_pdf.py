@@ -18,7 +18,7 @@ else:
     data["city"] = input("Enter city: ")
     data["state"] = input("Enter state: ")
     data["zip"] = input("Enter zip code: ")
-    data["image_path"] = f'images/letters/{data["last_name"][0]}.jpg'
+    data["image_path"] = f'images/letters/{data["last_name"][0].upper()}.jpg'
 
 line_data = [
     data["first_name"] + " " + data["last_name"],
