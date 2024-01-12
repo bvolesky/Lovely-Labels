@@ -1,17 +1,24 @@
+import json
+
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.pdfbase.pdfmetrics import stringWidth
 
-data = {
-    "first_name": "Johnny",
-    "last_name": "Appleseed",
-    "address": "1774 Red Road",
-    "city": "Leominster",
-    "state": "MA",
-    "zip": "01453",
-    "image_path": "images/A.jpg",
-}
+DEBUG = True
+if DEBUG:
+    data = json.load(open('data/default.json'))
+
+else:
+    # Get user input for the data
+    data = {}
+    data["first_name"] = input("Enter first name: ")
+    data["last_name"] = input("Enter last name: ")
+    data["address"] = input("Enter address: ")
+    data["city"] = input("Enter city: ")
+    data["state"] = input("Enter state: ")
+    data["zip"] = input("Enter zip code: ")
+    data["image_path"] = input("Enter image path: ")
 
 line_data = [
     data["first_name"] + " " + data["last_name"],
