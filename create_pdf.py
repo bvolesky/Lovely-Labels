@@ -5,7 +5,7 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.pdfbase.pdfmetrics import stringWidth
 
-DEBUG = True
+DEBUG = False
 if DEBUG:
     data = json.load(open('data/default.json'))
 
@@ -18,7 +18,7 @@ else:
     data["city"] = input("Enter city: ")
     data["state"] = input("Enter state: ")
     data["zip"] = input("Enter zip code: ")
-    data["image_path"] = input("Enter image path: ")
+    data["image_path"] = f'images/letters/{data["last_name"][0]}.jpg'
 
 line_data = [
     data["first_name"] + " " + data["last_name"],
