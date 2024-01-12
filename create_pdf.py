@@ -1,6 +1,7 @@
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
+from reportlab.pdfbase.pdfmetrics import stringWidth
 
 data = {
     "first_name": "Johnny",
@@ -238,7 +239,6 @@ class AddressGroup:
                 self.x * inch, self.y * inch, self.width * inch, self.height * inch
             )
 
-
 class AddressLine:
     def __init__(
         self,
@@ -259,16 +259,26 @@ class AddressLine:
         self.address_lines_outline = address_lines_outline
 
     def draw(self):
-        self.canvas.setFont(FONT_NAME, FONT_SIZE)
+        font_size = FONT_SIZE
+        text_width = stringWidth(self.text, FONT_NAME, font_size)
+
+        # Adjust font size to fit the text within the width of the address line
+        while text_width > (self.width - 2 * TEXT_X_OFFSET) * inch and font_size > 1:
+            font_size -= 0.1  # Decrease font size
+            text_width = stringWidth(self.text, FONT_NAME, font_size)
+
+        self.canvas.setFont(FONT_NAME, font_size)
         self.canvas.drawString(
             (self.x + TEXT_X_OFFSET) * inch,
             (self.y + TEXT_Y_OFFSET) * inch,
             self.text,
         )
+
         if self.address_lines_outline:
             self.canvas.rect(
                 self.x * inch, self.y * inch, self.width * inch, self.height * inch
             )
+
 
 
 class ImageGroup:
@@ -303,7 +313,7 @@ class Image:
 
 def main():
     my_sheet = Sheet(margin_outline=MARGIN_OUTLINE)
-    my_label_matrix = LabelMatrix(
+    LabelMatrix(
         my_sheet,
         label_data,
         label_outline=LABEL_OUTLINE,
