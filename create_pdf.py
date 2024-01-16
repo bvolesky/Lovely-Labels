@@ -255,8 +255,8 @@ class Image:
         )
 
 
-def create_pdf():
-    DEBUG = True
+def create_pdf(OUTPUT_PATH="output/address_labels.pdf"):
+    DEBUG = False
     if DEBUG:
         data = json.load(open("data/default.json"))
 
@@ -270,7 +270,6 @@ def create_pdf():
     ]
 
     label_data = {"lines": line_data, "image": data["image"]}
-    OUTPUT_PATH = "output/address_labels.pdf"
     my_sheet = Sheet(OUTPUT_PATH)
     LabelMatrix(my_sheet, label_data)
     my_sheet.canvas.save()

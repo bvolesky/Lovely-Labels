@@ -1,6 +1,7 @@
 import fitz
 from PIL import Image, ImageDraw
 
+
 def create_single_label():
     pdf_file_path = "output/address_labels.pdf"
     output_file_path = "output/single_address_label.png"
@@ -25,6 +26,7 @@ def create_single_label():
 
     cropped_image.save(output_file_path, "PNG")
     pdf_document.close()
+
 
 if __name__ == "__main__":
     create_single_label()

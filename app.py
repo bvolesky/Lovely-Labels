@@ -1,11 +1,13 @@
 import tkinter as tk
+from tkinter import ttk
+from ttkthemes import ThemedTk
 from tkinter import PhotoImage, filedialog
 import json
 from create_pdf import create_pdf
 from crop_pdf_to_single_label import create_single_label
 
 # Constants
-FONT_NAME = "Candara"
+FONT_NAME = "Calibri"
 ENTRY_FONT = (FONT_NAME, 12)
 DEFAULT_IMAGE_PATH = "output/default_single_address_label.png"
 LOGO_PATH = "images/ll_small.png"
@@ -17,13 +19,14 @@ APP_BG_COLOR = "#F4BFC3"
 PLACEHOLDERS = ["First", "Last", "Address", "City", "State", "Zip"]
 
 # Global variables
-root = tk.Tk()
+root = ThemedTk(theme="plastik")
 entries = {}
 image_label = None
 
 
 def init_ui():
     root.title(APP_TITLE)
+    root.set_theme("plastik")
     root.iconbitmap(APP_ICON)
     root.geometry("400x300")
     root.configure(bg=APP_BG_COLOR)
@@ -53,7 +56,7 @@ def setup_label():
 def setup_input_frame():
     # Create a frame for the input fields
     input_frame = tk.Frame(root, bg="#F4BFC3")
-    input_frame.place(relx=0.5, rely=0.43, anchor="n", relwidth=0.7, relheight=0.33)
+    input_frame.place(relx=0.5, rely=0.43, anchor="n", relwidth=0.7, relheight=0.35)
 
     # Configure grid columns in the frame
     for col in range(3):
@@ -138,7 +141,7 @@ def setup_create_button():
 
 
 def create_entry(frame, placeholder, row, column, columnspan=1):
-    entry = tk.Entry(frame, font=ENTRY_FONT, fg="grey")
+    entry = ttk.Entry(frame, font=ENTRY_FONT)
     entry.insert(0, placeholder)
     entry.bind("<FocusIn>", lambda event: on_entry_focus_in(event, placeholder))
     entry.bind("<FocusOut>", on_focus_out)
@@ -157,7 +160,6 @@ def on_entry_focus_in(event, placeholder):
     entry = event.widget
     if entry.get() == placeholder:
         entry.delete(0, "end")
-        entry.config(fg="black")
 
 
 def on_focus_out(event):
@@ -173,7 +175,6 @@ def on_focus_out(event):
 
     if entry.get() == "":
         entry.insert(0, placeholder)
-        entry.config(fg="grey")
     else:
         save_data()
         update_image_label()
@@ -203,8 +204,8 @@ def create_label_sheet():
         defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")]
     )
     if file_path:
-        # Call the function to create and save the label sheet
-        create_pdf(file_path)  # Assuming create_pdf accepts a file path argument
+        save_data()
+        create_pdf(file_path)
 
 
 # Run the application
