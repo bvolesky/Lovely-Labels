@@ -256,7 +256,7 @@ class Image:
 
 
 def create_pdf():
-    DEBUG = False
+    DEBUG = True
     if DEBUG:
         data = json.load(open("data/default.json"))
 
