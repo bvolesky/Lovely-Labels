@@ -1,94 +1,26 @@
 import json
-
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.pdfbase.pdfmetrics import stringWidth
 
-DEBUG = False
-if DEBUG:
-    data = json.load(open('data/default.json'))
-
-else:
-    # Get user input for the data
-    data = {}
-    data["first_name"] = input("Enter first name: ")
-    data["last_name"] = input("Enter last name: ")
-    data["address"] = input("Enter address: ")
-    data["city"] = input("Enter city: ")
-    data["state"] = input("Enter state: ")
-    data["zip"] = input("Enter zip code: ")
-    data["image_path"] = f'images/letters/{data["last_name"][0].upper()}.jpg'
-
-line_data = [
-    data["first_name"] + " " + data["last_name"],
-    data["address"],
-    data["city"] + ", " + data["state"] + " " + data["zip"],
-]
-
-
-label_data = {"lines": line_data, "image_path": data["image_path"]}
-
-
-# Global Constants
-DEFAULT_WIDTH = 8.5
-DEFAULT_HEIGHT = 11
-DEFAULT_X_MARGIN = 0.19
-DEFAULT_Y_MARGIN = 0.5
-DEFAULT_LINE_WIDTH = 0.3
-
-NUM_ROWS = 10
-NUM_COLS = 3
-HORIZONTAL_SPACING = 0.118
-LABEL_WIDTH = 2.625
-LABEL_HEIGHT = 1
-ADDRESS_GROUP_PADDING = 0.15
-IMAGE_GROUP_PADDING = 0.15
-ADDRESS_LINE_HEIGHT = (LABEL_HEIGHT - 2 * ADDRESS_GROUP_PADDING) / len(line_data)
-ADDRESS_LINE_SPACING = 0.0
-
-FONT_NAME = "Helvetica"
-FONT_SIZE = 9 - (len(line_data) - 3)
-TEXT_X_OFFSET = 0.025
-TEXT_Y_OFFSET = 0.05
-
-
-# Usage
-MARGIN_OUTLINE = False
-LABEL_OUTLINE = False
-ADDRESS_OUTLINE = False
-ADDRESS_LINES_OUTLINE = False
-IMAGE_OUTLINE = False
-
-# Output path
-OUTPUT_PATH = "output/address_labels.pdf"
-if all(
-    [
-        MARGIN_OUTLINE,
-        LABEL_OUTLINE,
-        ADDRESS_OUTLINE,
-        ADDRESS_LINES_OUTLINE,
-        IMAGE_OUTLINE,
-    ]
-):
-    OUTPUT_PATH = "output/address_labels_with_outlines.pdf"
-
 
 class Sheet:
     def __init__(
         self,
-        width=DEFAULT_WIDTH,
-        height=DEFAULT_HEIGHT,
-        x_margin=DEFAULT_X_MARGIN,
-        y_margin=DEFAULT_Y_MARGIN,
-        line_width=DEFAULT_LINE_WIDTH,
+        output_path,
+        width=8.5,
+        height=11,
+        x_margin=0.19,
+        y_margin=0.5,
+        line_width=0.3,
         margin_outline=False,
     ):
         self.width = width
         self.height = height
         self.x_margin = x_margin
         self.y_margin = y_margin
-        self.canvas = canvas.Canvas(OUTPUT_PATH, pagesize=letter)
+        self.canvas = canvas.Canvas(output_path, pagesize=letter)
         self.canvas.setLineWidth(line_width)
         self.margin_outline = margin_outline
         self._draw_margins()
@@ -114,9 +46,9 @@ class LabelMatrix:
         address_lines_outline=False,
         image_outline=False,
     ):
-        self.num_rows = NUM_ROWS
-        self.num_cols = NUM_COLS
-        self.horizontal_spacing = HORIZONTAL_SPACING
+        self.num_rows = 10
+        self.num_cols = 3
+        self.horizontal_spacing = 0.118
         self.sheet = sheet
         self.sample_label = self._create_sample_label(data)
         self.x = sheet.x_margin
@@ -175,8 +107,8 @@ class Label:
         address_outline=False,
         address_lines_outline=False,
         image_outline=False,
-        width=LABEL_WIDTH,
-        height=LABEL_HEIGHT,
+        width=2.625,
+        height=1,
     ):
         self.label_group = label_group
         self.x = x
@@ -214,7 +146,7 @@ class AddressGroup:
         data,
         address_outline,
         address_lines_outline,
-        padding=ADDRESS_GROUP_PADDING,
+        padding=0.15,
     ):
         self.label = label
         self.padding = padding
@@ -223,8 +155,8 @@ class AddressGroup:
         self.x = label.x + self.width - self.padding
         self.y = label.y + self.padding
         self.canvas = label.canvas
-        self.line_height = ADDRESS_LINE_HEIGHT
-        self.line_spacing = ADDRESS_LINE_SPACING
+        self.line_height = (1 - 2 * 0.15) / 3
+        self.line_spacing = 0
         self.address_lines = []
         self.data = data
         self.address_outline = address_outline
@@ -246,6 +178,7 @@ class AddressGroup:
                 self.x * inch, self.y * inch, self.width * inch, self.height * inch
             )
 
+
 class AddressLine:
     def __init__(
         self,
@@ -254,7 +187,7 @@ class AddressLine:
         y,
         text,
         address_lines_outline,
-        height=ADDRESS_LINE_HEIGHT,
+        height=0.23333333333,
     ):
         self.address_group = address_group
         self.x = x
@@ -264,20 +197,25 @@ class AddressLine:
         self.width = address_group.width
         self.canvas = address_group.canvas
         self.address_lines_outline = address_lines_outline
+        self.text_x_offset = 0.025
+        self.text_y_offset = 0.05
 
     def draw(self):
-        font_size = FONT_SIZE
-        text_width = stringWidth(self.text, FONT_NAME, font_size)
+        font_name = "Helvetica"
+        font_size = 9
+        text_width = stringWidth(self.text, font_name, font_size)
 
         # Adjust font size to fit the text within the width of the address line
-        while text_width > (self.width - 2 * TEXT_X_OFFSET) * inch and font_size > 1:
+        while (
+            text_width > (self.width - 2 * self.text_x_offset) * inch and font_size > 1
+        ):
             font_size -= 0.1  # Decrease font size
-            text_width = stringWidth(self.text, FONT_NAME, font_size)
+            text_width = stringWidth(self.text, font_name, font_size)
 
-        self.canvas.setFont(FONT_NAME, font_size)
+        self.canvas.setFont(font_name, font_size)
         self.canvas.drawString(
-            (self.x + TEXT_X_OFFSET) * inch,
-            (self.y + TEXT_Y_OFFSET) * inch,
+            (self.x + self.text_x_offset) * inch,
+            (self.y + self.text_y_offset) * inch,
             self.text,
         )
 
@@ -287,9 +225,8 @@ class AddressLine:
             )
 
 
-
 class ImageGroup:
-    def __init__(self, label, image, image_outline=False, padding=IMAGE_GROUP_PADDING):
+    def __init__(self, label, image, image_outline=False, padding=0.15):
         self.label = label
         self.padding = padding
         self.width = label.width * 0.5 - 2 * self.padding
@@ -318,18 +255,26 @@ class Image:
         )
 
 
-def main():
-    my_sheet = Sheet(margin_outline=MARGIN_OUTLINE)
-    LabelMatrix(
-        my_sheet,
-        label_data,
-        label_outline=LABEL_OUTLINE,
-        address_outline=ADDRESS_OUTLINE,
-        address_lines_outline=ADDRESS_LINES_OUTLINE,
-        image_outline=IMAGE_OUTLINE,
-    )
+def create_pdf():
+    DEBUG = False
+    if DEBUG:
+        data = json.load(open("data/default.json"))
+
+    else:
+        data = json.load(open("data/user_data.json"))
+
+    line_data = [
+        data["first_name"] + " " + data["last_name"],
+        data["address"],
+        data["city"] + ", " + data["state"] + " " + data["zip_code"],
+    ]
+
+    label_data = {"lines": line_data, "image_path": data["image_path"]}
+    OUTPUT_PATH = "output/address_labels.pdf"
+    my_sheet = Sheet(OUTPUT_PATH)
+    LabelMatrix(my_sheet, label_data)
     my_sheet.canvas.save()
 
 
 if __name__ == "__main__":
-    main()
+    create_pdf()
