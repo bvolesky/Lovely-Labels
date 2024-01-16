@@ -121,7 +121,7 @@ class Label:
         self.address_lines_outline = address_lines_outline
         self.image_outline = image_outline
         self.image_group = ImageGroup(
-            self, Image(data["image_path"]), image_outline=self.image_outline
+            self, Image(data["image"]), image_outline=self.image_outline
         )
         self.address_group = AddressGroup(
             self,
@@ -264,12 +264,12 @@ def create_pdf():
         data = json.load(open("data/user_data.json"))
 
     line_data = [
-        data["first_name"] + " " + data["last_name"],
+        data["first"] + " " + data["last"],
         data["address"],
-        data["city"] + ", " + data["state"] + " " + data["zip_code"],
+        data["city"] + ", " + data["state"] + " " + data["zip"],
     ]
 
-    label_data = {"lines": line_data, "image_path": data["image_path"]}
+    label_data = {"lines": line_data, "image": data["image"]}
     OUTPUT_PATH = "output/address_labels.pdf"
     my_sheet = Sheet(OUTPUT_PATH)
     LabelMatrix(my_sheet, label_data)
