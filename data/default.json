@@ -1,9 +1,9 @@
 {
-    "first_name": "Johnny",
-    "last_name": "Appleseed",
+    "first": "Johnny",
+    "last": "Appleseed",
     "address": "1774 Red Road",
     "city": "Leominster",
     "state": "MA",
-    "zip_code": "01453",
-    "image_path": "images/letters/A.jpg"
+    "zip": "01453",
+    "image": "images/letters/A.jpg"
 }
