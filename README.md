@@ -1,6 +1,20 @@
-![LL Image](/images/ll_transparent.png)
+![LL Image](/images/application.png)
 # Overview
 This is a simple tool that allows anyone to enter in information and generate a custom pdf that can be printed on label paper.
+
+## Usage
+## Option 1: Using Python (for all platforms)
+
+1. Install Python 3.9+ from [Python Downloads](https://www.python.org/downloads/).
+2. Clone the Repository - ```git clone https://github.com/bvolesky/Lovely-Labels.git```
+3. Navigate to the Repository - ```cd <repository_folder>/Lovely-Labels```
+4. Install Dependencies - ```pip install -r requirements.txt```
+5. Run the App - ```python app.py```
+
+## Option 2: For Windows Users
+1. Clone the Repository - ```git clone https://github.com/bvolesky/Lovely-Labels.git```
+2. Navigate to the Repository - ```cd <repository_folder>/Lovely-Labels```
+3. Double-click on ```Lovely Labels.exe``` to launch the Tinker app.
 
 ## Learnings:
 I really enjoyed developing this tool. 
@@ -12,7 +26,8 @@ After conducting a detailed financial analysis, it became apparent that maintain
 Consequently, I made the decision to shelve the business idea.
 
 Nevertheless, I remained committed to releasing the code, offering individuals the opportunity to save money by printing labels at home.
-I take great satisfaction in the development of this tool and hope that it proves beneficial to others, enabling them to efficiently manage their labeling needs.\
+I take great satisfaction in the development of this tool and hope that it proves beneficial to others, enabling them to efficiently manage their labeling needs.  
 
-![Outline Image](/images/labels_with_outlines.png)
 ![Label Image](/images/labels.png)
+
+
