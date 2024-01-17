@@ -1,1 +1,5 @@
 .idea
+__pycache__
+data\user_data.json
+output\address_labels.pdf
+output\single_address_label.png
