@@ -1,4 +1,7 @@
 .idea
 __pycache__
-data/user_data.json
 output
+build
+dist
+app.spec
+data/user_data.json
