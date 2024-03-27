@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from ttkthemes import ThemedTk
 from tkinter import PhotoImage, filedialog
+from PIL import Image, ImageTk
 import json
 from create_pdf import create_pdf
 from crop_pdf_to_single_label import create_single_label
@@ -22,6 +23,7 @@ PLACEHOLDERS = ["First", "Last", "Address", "City", "State", "Zip"]
 root = ThemedTk(theme="plastik")
 entries = {}
 image_label = None
+image_path = None
 
 
 def init_ui():
@@ -35,6 +37,7 @@ def init_ui():
     setup_label()
     setup_logo()
     setup_create_button()
+    setup_upload_button()
     root.mainloop()
 
 
@@ -82,9 +85,9 @@ def setup_input_frame():
 def on_enter(canvas, button_id):
     canvas.itemconfig(button_id, fill="#D35874")  # Darker shade of the original color
 
+
 def on_leave(canvas, button_id):
     canvas.itemconfig(button_id, fill="#F06A85")  # Original color
-
 
 
 def create_rounded_rect(canvas, x1, y1, x2, y2, radius=25, **kwargs):
@@ -114,8 +117,9 @@ def create_rounded_rect(canvas, x1, y1, x2, y2, radius=25, **kwargs):
 
 
 def setup_create_button():
-    canvas = tk.Canvas(root, width=200, height=50, bg=APP_BG_COLOR, highlightthickness=0)
-    canvas.place(relx=0.5, rely=0.88, anchor="center")
+    canvas = tk.Canvas(root, width=200, height=50, bg=APP_BG_COLOR,
+                       highlightthickness=0)
+    canvas.place(relx=0.75, rely=0.88, anchor="center")
 
     # Draw a rounded rectangle and get its item ID
     button_id = create_rounded_rect(canvas, 10, 10, 190, 40, radius=10, fill='#F06A85')
@@ -133,11 +137,61 @@ def setup_create_button():
     canvas.tag_bind("button_area", "<Button-1>", on_click)
 
     # Bind on_enter and on_leave functions to the transparent rectangle
-    canvas.tag_bind("button_area", "<Enter>", lambda event, b=button_id: on_enter(canvas, b))
-    canvas.tag_bind("button_area", "<Leave>", lambda event, b=button_id: on_leave(canvas, b))
+    canvas.tag_bind("button_area", "<Enter>",
+                    lambda event, b=button_id: on_enter(canvas, b))
+    canvas.tag_bind("button_area", "<Leave>",
+                    lambda event, b=button_id: on_leave(canvas, b))
 
 
+def setup_upload_button():
+    canvas = tk.Canvas(root, width=200, height=50, bg=APP_BG_COLOR,
+                       highlightthickness=0)
+    canvas.place(relx=0.25, rely=0.88, anchor="center")
 
+    button_id = create_rounded_rect(canvas, 10, 10, 190, 40, radius=10, fill='#F06A85')
+    canvas.create_text(100, 25, text="Upload Image", font=(FONT_NAME, 14), fill="white")
+    canvas.create_rectangle(10, 10, 190, 40, outline="", fill="",
+                            tags="upload_button_area")
+
+    canvas.tag_bind("upload_button_area", "<Button-1>", lambda event: upload_image())
+    canvas.tag_bind("upload_button_area", "<Enter>",
+                    lambda event, b=button_id: on_enter(canvas, b))
+    canvas.tag_bind("upload_button_area", "<Leave>",
+                    lambda event, b=button_id: on_leave(canvas, b))
+
+def upload_image():
+    global image_path
+    file_path = filedialog.askopenfilename(
+        filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
+    if file_path:
+        pil_img = Image.open(file_path)
+
+        # Resize parameters - max width and height for the image, not the label
+        max_width = 100
+        max_height = 100
+        original_width, original_height = pil_img.size
+
+        # Calculate the correct aspect ratio
+        ratio = min(max_width / original_width, max_height / original_height)
+        new_size = (int(original_width * ratio), int(original_height * ratio))
+
+        # Resize the image using LANCZOS resampling for high quality
+        resized_img = pil_img.resize(new_size, Image.Resampling.LANCZOS)
+
+        # Create a new image with the desired label size (assuming label size here)
+        label_width, label_height = 100, 100  # Set these to your label's dimensions
+        new_img = Image.new("RGBA", (label_width, label_height), (255, 255, 255, 0))
+        # Calculate position to paste resized image in the center
+        x1 = (label_width - new_size[0]) // 2
+        y1 = (label_height - new_size[1]) // 2
+        new_img.paste(resized_img, (x1, y1))
+
+        img = ImageTk.PhotoImage(new_img)
+        image_label.config(image=img)
+        image_label.image = img  # keep a reference
+        image_path = file_path
+        save_data()
+        update_image_label()
 
 
 def create_entry(frame, placeholder, row, column, columnspan=1):
@@ -185,6 +239,8 @@ def save_data():
         placeholder.lower(): entry.get() for placeholder, entry in entries.items()
     }
     user_data["image"] = f'images/letters/{user_data["last"][0].upper()}.jpg'
+    if image_path is not None:
+        user_data["image"] = image_path
 
     with open(DATA_FILE, "w") as file:
         json.dump(user_data, file)
