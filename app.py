@@ -85,9 +85,9 @@ def setup_input_frame():
 def on_enter(canvas, button_id):
     canvas.itemconfig(button_id, fill="#D35874")  # Darker shade of the original color
 
+
 def on_leave(canvas, button_id):
     canvas.itemconfig(button_id, fill="#F06A85")  # Original color
-
 
 
 def create_rounded_rect(canvas, x1, y1, x2, y2, radius=25, **kwargs):
@@ -117,7 +117,8 @@ def create_rounded_rect(canvas, x1, y1, x2, y2, radius=25, **kwargs):
 
 
 def setup_create_button():
-    canvas = tk.Canvas(root, width=200, height=50, bg=APP_BG_COLOR, highlightthickness=0)
+    canvas = tk.Canvas(root, width=200, height=50, bg=APP_BG_COLOR,
+                       highlightthickness=0)
     canvas.place(relx=0.75, rely=0.88, anchor="center")
 
     # Draw a rounded rectangle and get its item ID
@@ -136,20 +137,27 @@ def setup_create_button():
     canvas.tag_bind("button_area", "<Button-1>", on_click)
 
     # Bind on_enter and on_leave functions to the transparent rectangle
-    canvas.tag_bind("button_area", "<Enter>", lambda event, b=button_id: on_enter(canvas, b))
-    canvas.tag_bind("button_area", "<Leave>", lambda event, b=button_id: on_leave(canvas, b))
+    canvas.tag_bind("button_area", "<Enter>",
+                    lambda event, b=button_id: on_enter(canvas, b))
+    canvas.tag_bind("button_area", "<Leave>",
+                    lambda event, b=button_id: on_leave(canvas, b))
+
 
 def setup_upload_button():
-    canvas = tk.Canvas(root, width=200, height=50, bg=APP_BG_COLOR, highlightthickness=0)
+    canvas = tk.Canvas(root, width=200, height=50, bg=APP_BG_COLOR,
+                       highlightthickness=0)
     canvas.place(relx=0.25, rely=0.88, anchor="center")
 
     button_id = create_rounded_rect(canvas, 10, 10, 190, 40, radius=10, fill='#F06A85')
     canvas.create_text(100, 25, text="Upload Image", font=(FONT_NAME, 14), fill="white")
-    canvas.create_rectangle(10, 10, 190, 40, outline="", fill="", tags="upload_button_area")
+    canvas.create_rectangle(10, 10, 190, 40, outline="", fill="",
+                            tags="upload_button_area")
 
     canvas.tag_bind("upload_button_area", "<Button-1>", lambda event: upload_image())
-    canvas.tag_bind("upload_button_area", "<Enter>", lambda event, b=button_id: on_enter(canvas, b))
-    canvas.tag_bind("upload_button_area", "<Leave>", lambda event, b=button_id: on_leave(canvas, b))
+    canvas.tag_bind("upload_button_area", "<Enter>",
+                    lambda event, b=button_id: on_enter(canvas, b))
+    canvas.tag_bind("upload_button_area", "<Leave>",
+                    lambda event, b=button_id: on_leave(canvas, b))
 
 def upload_image():
     global image_path
@@ -158,7 +166,7 @@ def upload_image():
     if file_path:
         pil_img = Image.open(file_path)
 
-        # Resize parameters - max width and height
+        # Resize parameters - max width and height for the image, not the label
         max_width = 100
         max_height = 100
         original_width, original_height = pil_img.size
@@ -169,9 +177,18 @@ def upload_image():
 
         # Resize the image using LANCZOS resampling for high quality
         resized_img = pil_img.resize(new_size, Image.Resampling.LANCZOS)
-        img = ImageTk.PhotoImage(resized_img)
+
+        # Create a new image with the desired label size (assuming label size here)
+        label_width, label_height = 100, 100  # Set these to your label's dimensions
+        new_img = Image.new("RGBA", (label_width, label_height), (255, 255, 255, 0))
+        # Calculate position to paste resized image in the center
+        x1 = (label_width - new_size[0]) // 2
+        y1 = (label_height - new_size[1]) // 2
+        new_img.paste(resized_img, (x1, y1))
+
+        img = ImageTk.PhotoImage(new_img)
         image_label.config(image=img)
-        image_label.image = img
+        image_label.image = img  # keep a reference
         image_path = file_path
         save_data()
         update_image_label()
