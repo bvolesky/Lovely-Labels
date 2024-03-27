@@ -4,3 +4,4 @@ future~=0.18.3
 fitz~=0.0.1.dev2
 ttkthemes~=3.2.2
 frontend~=0.0.3
+tools~=0.1.9
