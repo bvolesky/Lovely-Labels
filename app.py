@@ -34,8 +34,8 @@ DESKTOP_PATH = None
 # Check if the script is running on Windows
 if platform.system() == 'Windows':
     # Paths to Pictures and Desktop folders using environment variables
-    PICTURES_PATH = os.path.join(os.environ.get('USERPROFILE', ''),'Pictures')
-    DESKTOP_PATH = os.path.join(os.environ.get('USERPROFILE', ''),'Desktop')
+    PICTURES_PATH = os.path.join(os.environ.get('USERPROFILE', ''), 'Pictures')
+    DESKTOP_PATH = os.path.join(os.environ.get('USERPROFILE', ''), 'Desktop')
 else:
     # Fallback for non-Windows systems
     home = os.path.expanduser('~')
@@ -93,7 +93,9 @@ def setup_input_frame():
     ]
 
     for placeholder, (row, col, col_span) in zip(PLACEHOLDERS, entry_configs):
-        entries[placeholder] = create_entry(input_frame, placeholder.split()[0], row, col, columnspan=col_span, font=("Arial", 14))
+        entries[placeholder] = create_entry(input_frame, placeholder.split()[0], row,
+                                            col, columnspan=col_span,
+                                            font=("Arial", 14))
 
 
 def on_enter(canvas, button_id):
@@ -150,28 +152,35 @@ def setup_create_button():
         create_label_sheet()
 
     canvas.tag_bind("button_area", "<Button-1>", on_click)
-    canvas.tag_bind("button_area", "<Enter>", lambda event, b=button_id: on_enter(canvas, b))
-    canvas.tag_bind("button_area", "<Leave>", lambda event, b=button_id: on_leave(canvas, b))
+    canvas.tag_bind("button_area", "<Enter>",
+                    lambda event, b=button_id: on_enter(canvas, b))
+    canvas.tag_bind("button_area", "<Leave>",
+                    lambda event, b=button_id: on_leave(canvas, b))
+
 
 def setup_upload_button():
-    canvas = tk.Canvas(root, width=300, height=80, bg=APP_BG_COLOR, highlightthickness=0)
+    canvas = tk.Canvas(root, width=300, height=80, bg=APP_BG_COLOR,
+                       highlightthickness=0)
     canvas.place(relx=0.25, rely=0.88, anchor="center")
 
     button_id = create_rounded_rect(canvas, 50, 15, 250, 65, radius=15, fill='#F06A85')
     canvas.create_text(150, 40, text="Upload Image", font=(FONT_NAME, 24), fill="white")
-    canvas.create_rectangle(50, 15, 250, 65, outline="", fill="", tags="upload_button_area")
+    canvas.create_rectangle(50, 15, 250, 65, outline="", fill="",
+                            tags="upload_button_area")
 
     canvas.tag_bind("upload_button_area", "<Button-1>", lambda event: upload_image())
-    canvas.tag_bind("upload_button_area", "<Enter>", lambda event, b=button_id: on_enter(canvas, b))
-    canvas.tag_bind("upload_button_area", "<Leave>", lambda event, b=button_id: on_leave(canvas, b))
-
+    canvas.tag_bind("upload_button_area", "<Enter>",
+                    lambda event, b=button_id: on_enter(canvas, b))
+    canvas.tag_bind("upload_button_area", "<Leave>",
+                    lambda event, b=button_id: on_leave(canvas, b))
 
 
 def upload_image():
     global image_path
     if PICTURES_PATH is not None and os.path.exists(PICTURES_PATH):
         file_path = filedialog.askopenfilename(initialdir=PICTURES_PATH,
-            filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
+                                               filetypes=[("Image files",
+                                                           "*.png;*.jpg;*.jpeg")])
     else:
         file_path = filedialog.askopenfilename(
             filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
@@ -204,7 +213,6 @@ def upload_image():
         update_image_label()
 
 
-
 def create_entry(frame, placeholder, row, column, columnspan=1, font=None):
     if font is None:
         font = ENTRY_FONT  # Use default font if none provided
@@ -216,7 +224,6 @@ def create_entry(frame, placeholder, row, column, columnspan=1, font=None):
         row=row, column=column, padx=5, pady=5, columnspan=columnspan, sticky="ew"
     )
     return entry
-
 
 
 def on_background_click(event):
