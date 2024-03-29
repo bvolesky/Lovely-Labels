@@ -1,3 +1,5 @@
+import os
+import shutil
 import tkinter as tk
 from tkinter import ttk
 from ttkthemes import ThemedTk
@@ -18,19 +20,21 @@ APP_TITLE = "Lovely Labels"
 APP_ICON = "images/ll_transparent.ico"
 APP_BG_COLOR = "#F4BFC3"
 PLACEHOLDERS = ["First", "Last", "Address", "City", "State", "Zip"]
+DESIRED_HEIGHT = 100
+DESIRED_WIDTH = 300
 
 # Global variables
 root = ThemedTk(theme="plastik")
 entries = {}
-image_label = None
 image_path = None
+image_label = None
 
 
 def init_ui():
     root.title(APP_TITLE)
     root.set_theme("plastik")
     root.iconbitmap(APP_ICON)
-    root.geometry("400x300")
+    root.geometry("600x400")
     root.configure(bg=APP_BG_COLOR)
     root.bind("<Button-1>", on_background_click)
     setup_input_frame()
@@ -50,22 +54,22 @@ def setup_logo():
 
 def setup_label():
     global image_label
-    image = PhotoImage(file=DEFAULT_IMAGE_PATH)
-    image_label = tk.Label(root, image=image, bg=APP_BG_COLOR)
-    image_label.place(relx=0.68, rely=0.23, anchor="center")
-    image_label.image = image
+    img = Image.open(DEFAULT_IMAGE_PATH)
+    photo_img = ImageTk.PhotoImage(img)
+    image_label = tk.Label(root, image=photo_img, bg=APP_BG_COLOR)
+    image_label.place(relx=0.65, rely=0.23, anchor="center")
+    image_label.image = photo_img
+    save_data()
+    update_image_label()
 
 
 def setup_input_frame():
-    # Create a frame for the input fields
     input_frame = tk.Frame(root, bg="#F4BFC3")
-    input_frame.place(relx=0.5, rely=0.43, anchor="n", relwidth=0.7, relheight=0.35)
+    input_frame.place(relx=0.5, rely=0.43, anchor="n", relwidth=0.9, relheight=0.6)
 
-    # Configure grid columns in the frame
     for col in range(3):
         input_frame.grid_columnconfigure(col, weight=1)
 
-    # Define entry configurations
     entry_configs = [
         (0, 0, 1),
         (0, 1, 3),
@@ -75,7 +79,6 @@ def setup_input_frame():
         (2, 2, 1),
     ]
 
-    # Create entries using a loop
     for placeholder, (row, col, col_span) in zip(PLACEHOLDERS, entry_configs):
         entries[placeholder] = create_entry(
             input_frame, placeholder.split()[0], row, col, columnspan=col_span
@@ -121,22 +124,16 @@ def setup_create_button():
                        highlightthickness=0)
     canvas.place(relx=0.75, rely=0.88, anchor="center")
 
-    # Draw a rounded rectangle and get its item ID
     button_id = create_rounded_rect(canvas, 10, 10, 190, 40, radius=10, fill='#F06A85')
 
-    # Place text over the rectangle
     canvas.create_text(100, 25, text="Create", font=(FONT_NAME, 14), fill="white")
 
-    # Create a transparent rectangle over the button for better event handling
     canvas.create_rectangle(10, 10, 190, 40, outline="", fill="", tags="button_area")
 
-    # Binding the click event
     def on_click(event):
-        create_label_sheet()  # Call your function here
+        create_label_sheet()
 
     canvas.tag_bind("button_area", "<Button-1>", on_click)
-
-    # Bind on_enter and on_leave functions to the transparent rectangle
     canvas.tag_bind("button_area", "<Enter>",
                     lambda event, b=button_id: on_enter(canvas, b))
     canvas.tag_bind("button_area", "<Leave>",
@@ -159,6 +156,7 @@ def setup_upload_button():
     canvas.tag_bind("upload_button_area", "<Leave>",
                     lambda event, b=button_id: on_leave(canvas, b))
 
+
 def upload_image():
     global image_path
     file_path = filedialog.askopenfilename(
@@ -166,32 +164,31 @@ def upload_image():
     if file_path:
         pil_img = Image.open(file_path)
 
-        # Resize parameters - max width and height for the image, not the label
-        max_width = 100
-        max_height = 100
+        if pil_img.mode != "RGBA":
+            pil_img = pil_img.convert("RGBA")
+
         original_width, original_height = pil_img.size
+        scaling_factor = 0.8
 
-        # Calculate the correct aspect ratio
-        ratio = min(max_width / original_width, max_height / original_height)
-        new_size = (int(original_width * ratio), int(original_height * ratio))
+        new_width = int(original_width * scaling_factor)
+        new_height = int(original_height * scaling_factor)
 
-        # Resize the image using LANCZOS resampling for high quality
-        resized_img = pil_img.resize(new_size, Image.Resampling.LANCZOS)
+        resized_img = pil_img.resize((new_width, new_height), Image.LANCZOS)
 
-        # Create a new image with the desired label size (assuming label size here)
-        label_width, label_height = 100, 100  # Set these to your label's dimensions
-        new_img = Image.new("RGBA", (label_width, label_height), (255, 255, 255, 0))
-        # Calculate position to paste resized image in the center
-        x1 = (label_width - new_size[0]) // 2
-        y1 = (label_height - new_size[1]) // 2
-        new_img.paste(resized_img, (x1, y1))
+        new_img = Image.new("RGBA", (DESIRED_WIDTH, DESIRED_HEIGHT),
+                            (255, 255, 255, 255))
+
+        x1 = (DESIRED_WIDTH - new_width) // 2
+        y1 = (DESIRED_HEIGHT - new_height) // 2
+
+        new_img.paste(resized_img, (x1, y1), resized_img)
 
         img = ImageTk.PhotoImage(new_img)
-        image_label.config(image=img)
-        image_label.image = img  # keep a reference
+        image_label.image = img
         image_path = file_path
         save_data()
         update_image_label()
+
 
 
 def create_entry(frame, placeholder, row, column, columnspan=1):
@@ -249,15 +246,31 @@ def save_data():
 def update_image_label():
     create_pdf()
     create_single_label()
+    label_image = Image.open(SINGLE_LABEL_IMAGE_PATH)
 
-    image = PhotoImage(file=SINGLE_LABEL_IMAGE_PATH)
-    image_label.config(image=image)
-    image_label.image = image
+    if label_image.mode != "RGBA":
+        label_image = label_image.convert("RGBA")
+
+    original_width, original_height = label_image.size
+    ratio = min(DESIRED_WIDTH / original_width, DESIRED_HEIGHT / original_height)
+    new_size = (int(original_width * ratio), int(original_height * ratio))
+
+    new_img = Image.new("RGBA", (DESIRED_WIDTH, DESIRED_HEIGHT), (255, 255, 255, 0))
+
+    x1 = (DESIRED_WIDTH - new_size[0]) // 2
+    y1 = (DESIRED_HEIGHT - new_size[1]) // 2
+
+    new_img.paste(label_image.resize(new_size, Image.Resampling.LANCZOS), (x1, y1))
+    final_img = ImageTk.PhotoImage(new_img)
+    image_label.config(image=final_img)
+    image_label.image = final_img
 
 
 def create_label_sheet():
     file_path = filedialog.asksaveasfilename(
-        defaultextension=".pdf", filetypes=[("PDF files", "*.pdf")]
+        defaultextension=".pdf",
+        filetypes=[("PDF files", "*.pdf")],
+        initialfile="labels.pdf"
     )
     if file_path:
         save_data()

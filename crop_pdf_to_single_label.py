@@ -6,7 +6,7 @@ def create_single_label():
     pdf_file_path = "output/address_labels.pdf"
     output_file_path = "output/single_address_label.png"
     corner_radius = 10  # radius of the rounded corners
-    x1, y1, x2, y2 = 20, 330, 225, 395  # left, upper, right, lower
+    x1, y1, x2, y2 = 20, 330, 220, 395  # left, upper, right, lower
 
     pdf_document = fitz.open(pdf_file_path)
     page = pdf_document[0]

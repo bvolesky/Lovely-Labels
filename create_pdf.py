@@ -152,7 +152,7 @@ class AddressGroup:
         self.padding = padding
         self.width = label.width * 0.5
         self.height = label.height - 2 * self.padding
-        self.x = label.x + self.width - self.padding
+        self.x = label.x + self.width - self.padding + 0.1
         self.y = label.y + self.padding
         self.canvas = label.canvas
         self.line_height = (1 - 2 * 0.15) / 3
