@@ -1,5 +1,5 @@
 import os
-import shutil
+import platform
 import tkinter as tk
 from tkinter import ttk
 from ttkthemes import ThemedTk
@@ -28,6 +28,19 @@ root = ThemedTk(theme="plastik")
 entries = {}
 image_path = None
 image_label = None
+PICTURES_PATH = None
+DESKTOP_PATH = None
+
+# Check if the script is running on Windows
+if platform.system() == 'Windows':
+    # Paths to Pictures and Desktop folders using environment variables
+    PICTURES_PATH = os.path.join(os.environ.get('USERPROFILE', ''),'Pictures')
+    DESKTOP_PATH = os.path.join(os.environ.get('USERPROFILE', ''),'Desktop')
+else:
+    # Fallback for non-Windows systems
+    home = os.path.expanduser('~')
+    PICTURES_PATH = os.path.join(home, 'Pictures')  # Adjust if necessary
+    DESKTOP_PATH = os.path.join(home, 'Desktop')  # Adjust if necessary
 
 
 def init_ui():
@@ -40,8 +53,8 @@ def init_ui():
     setup_input_frame()
     setup_label()
     setup_logo()
-    setup_create_button()
     setup_upload_button()
+    setup_create_button()
     root.mainloop()
 
 
@@ -65,7 +78,7 @@ def setup_label():
 
 def setup_input_frame():
     input_frame = tk.Frame(root, bg="#F4BFC3")
-    input_frame.place(relx=0.5, rely=0.43, anchor="n", relwidth=0.9, relheight=0.6)
+    input_frame.place(relx=0.5, rely=0.43, anchor="n", relwidth=0.9, relheight=0.7)
 
     for col in range(3):
         input_frame.grid_columnconfigure(col, weight=1)
@@ -80,9 +93,7 @@ def setup_input_frame():
     ]
 
     for placeholder, (row, col, col_span) in zip(PLACEHOLDERS, entry_configs):
-        entries[placeholder] = create_entry(
-            input_frame, placeholder.split()[0], row, col, columnspan=col_span
-        )
+        entries[placeholder] = create_entry(input_frame, placeholder.split()[0], row, col, columnspan=col_span, font=("Arial", 14))
 
 
 def on_enter(canvas, button_id):
@@ -120,47 +131,50 @@ def create_rounded_rect(canvas, x1, y1, x2, y2, radius=25, **kwargs):
 
 
 def setup_create_button():
-    canvas = tk.Canvas(root, width=200, height=50, bg=APP_BG_COLOR,
+    canvas = tk.Canvas(root, width=300, height=80, bg=APP_BG_COLOR,
                        highlightthickness=0)
-    canvas.place(relx=0.75, rely=0.88, anchor="center")
+    canvas.place(relx=0.70, rely=0.88, anchor="center")
 
-    button_id = create_rounded_rect(canvas, 10, 10, 190, 40, radius=10, fill='#F06A85')
+    # Adjusted button dimensions for a smaller button
+    button_id = create_rounded_rect(canvas, 20, 15, 280, 65, radius=15,
+                                    fill='#F06A85')  # Smaller button
 
-    canvas.create_text(100, 25, text="Create", font=(FONT_NAME, 14), fill="white")
+    # Adjust the text to be centered in the new, smaller button
+    canvas.create_text(150, 40, text="Save Label Sheet", font=(FONT_NAME, 24),
+                       fill="white")  # Adjusted font size if needed
 
-    canvas.create_rectangle(10, 10, 190, 40, outline="", fill="", tags="button_area")
+    # Adjusted clickable area to match the new button dimensions
+    canvas.create_rectangle(50, 15, 250, 65, outline="", fill="", tags="button_area")
 
     def on_click(event):
         create_label_sheet()
 
     canvas.tag_bind("button_area", "<Button-1>", on_click)
-    canvas.tag_bind("button_area", "<Enter>",
-                    lambda event, b=button_id: on_enter(canvas, b))
-    canvas.tag_bind("button_area", "<Leave>",
-                    lambda event, b=button_id: on_leave(canvas, b))
-
+    canvas.tag_bind("button_area", "<Enter>", lambda event, b=button_id: on_enter(canvas, b))
+    canvas.tag_bind("button_area", "<Leave>", lambda event, b=button_id: on_leave(canvas, b))
 
 def setup_upload_button():
-    canvas = tk.Canvas(root, width=200, height=50, bg=APP_BG_COLOR,
-                       highlightthickness=0)
+    canvas = tk.Canvas(root, width=300, height=80, bg=APP_BG_COLOR, highlightthickness=0)
     canvas.place(relx=0.25, rely=0.88, anchor="center")
 
-    button_id = create_rounded_rect(canvas, 10, 10, 190, 40, radius=10, fill='#F06A85')
-    canvas.create_text(100, 25, text="Upload Image", font=(FONT_NAME, 14), fill="white")
-    canvas.create_rectangle(10, 10, 190, 40, outline="", fill="",
-                            tags="upload_button_area")
+    button_id = create_rounded_rect(canvas, 50, 15, 250, 65, radius=15, fill='#F06A85')
+    canvas.create_text(150, 40, text="Upload Image", font=(FONT_NAME, 24), fill="white")
+    canvas.create_rectangle(50, 15, 250, 65, outline="", fill="", tags="upload_button_area")
 
     canvas.tag_bind("upload_button_area", "<Button-1>", lambda event: upload_image())
-    canvas.tag_bind("upload_button_area", "<Enter>",
-                    lambda event, b=button_id: on_enter(canvas, b))
-    canvas.tag_bind("upload_button_area", "<Leave>",
-                    lambda event, b=button_id: on_leave(canvas, b))
+    canvas.tag_bind("upload_button_area", "<Enter>", lambda event, b=button_id: on_enter(canvas, b))
+    canvas.tag_bind("upload_button_area", "<Leave>", lambda event, b=button_id: on_leave(canvas, b))
+
 
 
 def upload_image():
     global image_path
-    file_path = filedialog.askopenfilename(
-        filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
+    if PICTURES_PATH is not None and os.path.exists(PICTURES_PATH):
+        file_path = filedialog.askopenfilename(initialdir=PICTURES_PATH,
+            filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
+    else:
+        file_path = filedialog.askopenfilename(
+            filetypes=[("Image files", "*.png;*.jpg;*.jpeg")])
     if file_path:
         pil_img = Image.open(file_path)
 
@@ -191,8 +205,10 @@ def upload_image():
 
 
 
-def create_entry(frame, placeholder, row, column, columnspan=1):
-    entry = ttk.Entry(frame, font=ENTRY_FONT)
+def create_entry(frame, placeholder, row, column, columnspan=1, font=None):
+    if font is None:
+        font = ENTRY_FONT  # Use default font if none provided
+    entry = ttk.Entry(frame, font=font)
     entry.insert(0, placeholder)
     entry.bind("<FocusIn>", lambda event: on_entry_focus_in(event, placeholder))
     entry.bind("<FocusOut>", on_focus_out)
@@ -200,6 +216,7 @@ def create_entry(frame, placeholder, row, column, columnspan=1):
         row=row, column=column, padx=5, pady=5, columnspan=columnspan, sticky="ew"
     )
     return entry
+
 
 
 def on_background_click(event):
@@ -267,11 +284,19 @@ def update_image_label():
 
 
 def create_label_sheet():
-    file_path = filedialog.asksaveasfilename(
-        defaultextension=".pdf",
-        filetypes=[("PDF files", "*.pdf")],
-        initialfile="labels.pdf"
-    )
+    if DESKTOP_PATH is not None and os.path.exists(DESKTOP_PATH):
+        file_path = filedialog.asksaveasfilename(
+            initialdir=DESKTOP_PATH,
+            defaultextension=".pdf",
+            filetypes=[("PDF files", "*.pdf")],
+            initialfile="labels.pdf",
+        )
+    else:
+        file_path = filedialog.asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("PDF files", "*.pdf")],
+            initialfile="labels.pdf",
+        )
     if file_path:
         save_data()
         create_pdf(file_path)
