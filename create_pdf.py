@@ -1,9 +1,19 @@
+import os
+import sys
 import json
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib.units import inch
 from reportlab.pdfbase.pdfmetrics import stringWidth
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+OUTPUT_PATH = resource_path(os.path.join('output', 'address_labels.pdf'))
+DEFAULT_JSON = resource_path(os.path.join('data', 'default.json'))
+USER_DATA_JSON = resource_path(os.path.join('data','user_data.json'))
 
 class Sheet:
     def __init__(
@@ -255,13 +265,13 @@ class Image:
         )
 
 
-def create_pdf(OUTPUT_PATH="output/address_labels.pdf"):
+def create_pdf(OUTPUT_PATH=OUTPUT_PATH):
     DEBUG = False
     if DEBUG:
-        data = json.load(open("data/default.json"))
+        data = json.load(open(DEFAULT_JSON))
 
     else:
-        data = json.load(open("data/user_data.json"))
+        data = json.load(open(USER_DATA_JSON))
 
     line_data = [
         data["first"] + " " + data["last"],

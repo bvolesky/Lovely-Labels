@@ -1,4 +1,5 @@
 import os
+import sys
 import platform
 import tkinter as tk
 from tkinter import ttk
@@ -9,15 +10,20 @@ import json
 from create_pdf import create_pdf
 from crop_pdf_to_single_label import create_single_label
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
 # Constants
 FONT_NAME = "Calibri"
 ENTRY_FONT = (FONT_NAME, 12)
-DEFAULT_IMAGE_PATH = "output/default_single_address_label.png"
-LOGO_PATH = "images/ll_small.png"
-SINGLE_LABEL_IMAGE_PATH = "output/single_address_label.png"
-DATA_FILE = "data/user_data.json"
+DEFAULT_IMAGE_PATH = resource_path(os.path.join('output', 'default_single_address_label.png'))
+LOGO_PATH = resource_path(os.path.join('images', 'll_small.png'))
+SINGLE_LABEL_IMAGE_PATH = resource_path(os.path.join('output', 'single_address_label.png'))
+DATA_FILE = resource_path(os.path.join('data', 'user_data.json'))
 APP_TITLE = "Lovely Labels"
-APP_ICON = "images/ll_transparent.ico"
+APP_ICON = resource_path(os.path.join('images', 'll_transparent.ico'))
 APP_BG_COLOR = "#F4BFC3"
 PLACEHOLDERS = ["First", "Last", "Address", "City", "State", "Zip"]
 DESIRED_HEIGHT = 100
@@ -259,7 +265,7 @@ def save_data():
     user_data = {
         placeholder.lower(): entry.get() for placeholder, entry in entries.items()
     }
-    user_data["image"] = f'images/letters/{user_data["last"][0].upper()}.jpg'
+    user_data["image"] = resource_path(os.path.join('images/letters', f'{user_data["last"][0].upper()}.jpg'))
     if image_path is not None:
         user_data["image"] = image_path
 

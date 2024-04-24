@@ -1,13 +1,21 @@
+import os
+import sys
 import fitz  # PyMuPDF
 from PIL import Image, ImageDraw, ImageOps
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+OUTPUT_PATH = resource_path(os.path.join('output', 'address_labels.pdf'))
+SINGLE_ADDRESS_LABEL = resource_path(os.path.join('output', 'single_address_label.png'))
+
 def create_single_label(dpi=300):
-    pdf_file_path = "output/address_labels.pdf"
-    output_file_path = "output/single_address_label.png"
     corner_radius = 10  # Radius of the rounded corners, scaled by DPI
     x1, y1, x2, y2 = 20, 330, 220, 395  # Original cropping coordinates
 
-    pdf_document = fitz.open(pdf_file_path)
+    pdf_document = fitz.open(OUTPUT_PATH)
     page = pdf_document[0]
     pix = page.get_pixmap(dpi=dpi)
     image = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
@@ -27,7 +35,7 @@ def create_single_label(dpi=300):
     # Correctly applying the mask to create rounded corners
     final_image = Image.alpha_composite(Image.new("RGBA", cropped_image.size, (255, 255, 255, 0)), rounded_image)
 
-    final_image.save(output_file_path, "PNG")
+    final_image.save(SINGLE_ADDRESS_LABEL, "PNG")
     pdf_document.close()
 
 if __name__ == "__main__":
